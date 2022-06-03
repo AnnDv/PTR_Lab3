@@ -19,5 +19,6 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-http" % "10.1.11",
   "com.typesafe.akka" %% "akka-actor" % "2.5.31",
   "com.lihaoyi" %% "upickle" % "0.9.5"
+  // "com.lihaoyi" %% "pprint" % "0.7.0",
   
 )

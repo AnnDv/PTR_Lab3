@@ -3,6 +3,9 @@ package com
 import akka.actor.Actor
 import akka.actor.ActorSystem
 import scala.concurrent.ExecutionContextExecutor
+// import play.api.libs.json.Json
+
+
 
 class Router extends Actor{
     
@@ -11,7 +14,8 @@ class Router extends Actor{
 
   override def receive: Receive = {
       case message => {
-          println(message)
+          print(message)
+          println(new Object())
       }
   }
 }

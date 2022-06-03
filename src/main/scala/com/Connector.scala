@@ -43,22 +43,19 @@ class Connector(router : ActorRef) extends Actor{
                         // autoScaler ! getCurrentMinute
                     }
             )
-
+        
+        // access to tweets2. For each event it generates unique ID and sends events together with event data
         val eventSource2: Future[Done] =
             EventSource(
             uri = Uri(s"http://localhost:4000/tweets/2"),
             send,
-            ).runForeach(event=>event)
+            ).runForeach(event=>{
+                    
+                        val temp = event.getData()
+                        val id = randomUUID().toString
+                        router ! (temp, id)
+                        // autoScaler ! getCurrentMinute
+                    })
     }
-
-    def executeEvents(eventSource: Source[ServerSentEvent, NotUsed], eventSource2: Source[ServerSentEvent, NotUsed]): Unit = {
-    val eventsList: List[Source[ServerSentEvent, NotUsed]] = List(eventSource, eventSource2)
-
-    val list: List[Future[immutable.Seq[ServerSentEvent]]] = eventsList.toStream.map(sse => {
-      sse.throttle(elements = 1, per = 500.milliseconds, maximumBurst = 1, ThrottleMode.Shaping)
-        .take(20)
-        .runWith(Sink.seq)
-    }).toList
-}
   
 }
