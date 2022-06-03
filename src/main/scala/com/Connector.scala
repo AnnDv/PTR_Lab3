@@ -20,12 +20,12 @@ import java.util.UUID.randomUUID
 import akka.actor.ActorRef
 import akka.actor.Props
 
-class Connector(router : ActorRef) extends Actor{
+class Connector(multiplier : ActorRef) extends Actor{
 
     implicit val system: ActorSystem = context.system
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-    // val routerScaler: ActorRef = system.actorOf(Props[Router], "router")
+    // val multiplierScaler: ActorRef = system.actorOf(Props[multiplier], "multiplier")
 
   override def receive: Receive = {
       case  "first" =>
@@ -37,9 +37,9 @@ class Connector(router : ActorRef) extends Actor{
             send,
             ).runForeach(event=>{
                     
-                        val temp = event.getData()
+                        val data = event.getData()
                         val id = randomUUID().toString
-                        router ! (temp, id)
+                        multiplier ! (data, id)
                         // autoScaler ! getCurrentMinute
                     }
             )
@@ -51,9 +51,9 @@ class Connector(router : ActorRef) extends Actor{
             send,
             ).runForeach(event=>{
                     
-                        val temp = event.getData()
+                        val data = event.getData()
                         val id = randomUUID().toString
-                        router ! (temp, id)
+                        multiplier ! (data, id)
                         // autoScaler ! getCurrentMinute
                     })
     }
