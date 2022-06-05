@@ -1,5 +1,6 @@
 package com
 
+// creates topic object (name and list of messages)
 class Topic(topicName: String, var listOfMessages: Array[String])
 {
     def getTopicName() : String =
