@@ -30,7 +30,7 @@ class Connector(multiplier : ActorRef) extends Actor{
   override def receive: Receive = {
       case  "first" =>
         val send: HttpRequest => Future[HttpResponse] = Http().singleRequest(_)
-
+        // access to tweets1. For each event it generates unique ID and sends events together with event data
         val eventSource: Future[Done] =
             EventSource(
             uri = Uri(s"http://localhost:4000/tweets/1"),
@@ -39,6 +39,7 @@ class Connector(multiplier : ActorRef) extends Actor{
                     
                         val data = event.getData()
                         val id = randomUUID().toString
+                        // sends to multiplier data and id
                         multiplier ! (data, id)
                         // autoScaler ! getCurrentMinute
                     }
