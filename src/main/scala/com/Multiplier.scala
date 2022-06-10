@@ -35,7 +35,7 @@ class Multiplier extends Actor{
           val newObject = createNewDataObject(topic, message)
           listOfData = listOfData.appended(newObject)
         }
-        println(ifExist)
+        // println(ifExist)
       }
 
   }
