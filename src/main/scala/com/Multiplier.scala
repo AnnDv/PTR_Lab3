@@ -6,6 +6,7 @@ import scala.concurrent.ExecutionContextExecutor
 import play.api.libs.json.Json
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.util.ArrayList
+import akka.actor.ActorRef
 // import play.api.libs.json.Json
 
 
@@ -18,11 +19,14 @@ class Multiplier extends Actor{
   //cretes list of data object (topic and list of messages)
     var listOfData = Array[Topic]()
 
+  // list of type akka actorRef 
+    var listOfConnection = Array[ActorRef]()
+
   override def receive: Receive = {
       // receive data and id from connector
       case (data : String, id: String) => {
         val (topic, message) = extractTopicAndMessageJson(data)
-
+        // println(sender())
         // verify if topic exists in list of Data object
         val (ifExist, referenceData) = isTopicExist(topic)
 
@@ -35,7 +39,19 @@ class Multiplier extends Actor{
           val newObject = createNewDataObject(topic, message)
           listOfData = listOfData.appended(newObject)
         }
+
+        // check if list is > 0, then it sends messages to tcp connections from the list
+        if(listOfConnection.length > 0) {
+          for (item <- listOfConnection) {
+            item ! ("send_message", message)
+          }
+        }
         // println(ifExist)
+      }
+      // appends address of the actor in the listOfConnection
+      case("connect") => {
+        println("CONNECT")
+        listOfConnection  = listOfConnection.appended(sender)
       }
 
   }

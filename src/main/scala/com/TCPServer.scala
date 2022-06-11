@@ -5,8 +5,9 @@ import akka.io.IO
 import akka.io.Tcp
 import java.net.InetSocketAddress
 import akka.actor.Props
+import akka.actor.ActorRef
 
-class TCPServer extends Actor{
+class TCPServer(multiplier : ActorRef) extends Actor{
     import Tcp._
     import context.system
 
@@ -21,7 +22,8 @@ class TCPServer extends Actor{
     case c @ Connected(remote, local) =>
     //   println(local)
 
-      val handler = context.actorOf(Props[SimplisticHandler]())
+    // for each new connection creates a handler
+      val handler = context.actorOf(Props(new SimplisticHandler(multiplier)))
       val connection = sender()
       connection ! Register(handler)
       
