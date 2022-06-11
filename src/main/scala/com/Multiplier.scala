@@ -43,7 +43,7 @@ class Multiplier extends Actor{
         // check if list is > 0, then it sends messages to tcp connections from the list
         if(listOfConnection.length > 0) {
           for (item <- listOfConnection) {
-            item ! ("send_message", message)
+            item ! ("send_message", topic, message)
           }
         }
         // println(ifExist)
