@@ -19,26 +19,42 @@ class SimplisticHandler(multiplier : ActorRef) extends Actor{
 
     case Received(data) => {
       // extracts command and topic received from the client
-        val json = Json.parse(data.utf8String)
+      // JsUndefined
+        
+        var dataString = data.utf8String
+        val json = Json.parse(dataString)
         val command = (json \ "command").as[String]
-        val topic = (json \ "topic").as[String]
-        println(command + ", " + topic)
 
-        val response = ByteString("okkk")
-        sender() ! Write(response)
+        if (command == "sendFromProducer") {
+          val receiveData = (json \ "data").as[String]
+          val receiveId = (json \ "id").as[String]
+          multiplier ! (receiveData, receiveId)
+          // println(data)
+        }
+        else {
+          val topic = (json \ "topic").as[String]
+          println(command + ", " + topic) 
 
-        if(command == "connect") {
-          queueAddress = context.actorOf(Props[Queue])
-          clientAddress = sender
-          multiplier ! command
-        }
-        else if (command == "subscribe") {
-          queueAddress ! (command, topic)
-        }
-        else if (command == "unsubscribe"){
-          queueAddress ! (command, topic)
+          val response = ByteString("okkk")
+          sender() ! Write(response)
 
+          if(command == "connect") {
+            // create queue (message scheme)
+            queueAddress = context.actorOf(Props[Queue])
+            clientAddress = sender
+            // tells multiplier to send message to handler
+            multiplier ! command
+          }
+          else if (command == "subscribe") {
+            queueAddress ! (command, topic)
+          }
+          else if (command == "unsubscribe"){
+            queueAddress ! (command, topic)
+
+          }
         }
+        
+        
     }
 
     // sends messages to Client

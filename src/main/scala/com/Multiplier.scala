@@ -26,7 +26,7 @@ class Multiplier extends Actor{
       // receive data and id from connector
       case (data : String, id: String) => {
         val (topic, message) = extractTopicAndMessageJson(data)
-        // println(sender())
+        // println(topic)
         // verify if topic exists in list of Data object
         val (ifExist, referenceData) = isTopicExist(topic)
 
