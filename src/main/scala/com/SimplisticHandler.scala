@@ -19,17 +19,22 @@ class SimplisticHandler(multiplier : ActorRef) extends Actor{
 
     case Received(data) => {
       // extracts command and topic received from the client
-      // JsUndefined
         
         var dataString = data.utf8String
         val json = Json.parse(dataString)
         val command = (json \ "command").as[String]
 
+        // verifies if message are from Producer and receives data from it
         if (command == "sendFromProducer") {
           val receiveData = (json \ "data").as[String]
           val receiveId = (json \ "id").as[String]
           multiplier ! (receiveData, receiveId)
           // println(data)
+        }
+
+        // message acknowledgment from the client
+        else if (command == "Ack") {
+          println("AAck")
         }
         else {
           val topic = (json \ "topic").as[String]
