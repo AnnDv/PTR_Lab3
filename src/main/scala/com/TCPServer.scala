@@ -25,8 +25,6 @@ class TCPServer(multiplier : ActorRef) extends Actor{
     // for each new connection creates a handler
       val handler = context.actorOf(Props(new SimplisticHandler(multiplier)))
       val connection = sender()
-      connection ! Register(handler)
-      
+      connection ! Register(handler, keepOpenOnPeerClosed = false)
   }
-  
 }

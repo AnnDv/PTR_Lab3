@@ -14,12 +14,12 @@ class SimplisticHandler(multiplier : ActorRef) extends Actor{
 
   var clientAddress : ActorRef = null
   var queueAddress : ActorRef = null
+  var messageAck : String = null
 
   override def receive = {
-
     case Received(data) => {
       // extracts command and topic received from the client
-        
+        messageAck = null
         var dataString = data.utf8String
         val json = Json.parse(dataString)
         val command = (json \ "command").as[String]
@@ -35,6 +35,7 @@ class SimplisticHandler(multiplier : ActorRef) extends Actor{
         // message acknowledgment from the client
         else if (command == "Ack") {
           println("AAck")
+          messageAck = command
         }
         else {
           val topic = (json \ "topic").as[String]
@@ -47,6 +48,7 @@ class SimplisticHandler(multiplier : ActorRef) extends Actor{
             // create queue (message scheme)
             queueAddress = context.actorOf(Props[Queue])
             clientAddress = sender
+            queueAddress ! ("set_client_address", clientAddress)
             // tells multiplier to send message to handler
             multiplier ! command
           }
@@ -59,7 +61,6 @@ class SimplisticHandler(multiplier : ActorRef) extends Actor{
           }
         }
         
-        
     }
 
     // sends messages to Client
@@ -67,14 +68,20 @@ class SimplisticHandler(multiplier : ActorRef) extends Actor{
       // println(clientAddress)
       queueAddress ! ("send_message", topic, message)
     }
-    // sends message with neccessary topic
+    // sends message after ack with neccessary topic
     case ("send_message_client", message: String) => {
-      clientAddress ! Write(ByteString(message))
+      if (messageAck == "Ack") {
+        var messageToClient = "[next after ack]  " + message
+        clientAddress ! Write(ByteString(messageToClient))
+
+      }
     }
+    
 
     case PeerClosed     => 
     {
         println("Connection Closed ....")
+        context.stop(queueAddress)
         context.stop(self)
     }
   }
