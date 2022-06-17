@@ -34,7 +34,7 @@ class SimplisticHandler(multiplier : ActorRef) extends Actor{
 
         // message acknowledgment from the client
         else if (command == "Ack") {
-          println("AAck")
+          // println("AAck")
           messageAck = command
         }
         else {
