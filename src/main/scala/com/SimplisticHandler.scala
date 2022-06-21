@@ -7,8 +7,14 @@ import play.api.libs.json.Json
 import akka.actor.ActorRef
 import akka.actor.Props
 import com.Queue
+import akka.actor.PoisonPill
+import akka.pattern.BackoffSupervisor
+import akka.pattern.BackoffOpts
+import scala.concurrent._
+import scala.concurrent.duration._
+import java.net.InetSocketAddress
 
-class SimplisticHandler(multiplier : ActorRef) extends Actor{
+class SimplisticHandler(multiplier : ActorRef, remoteAdress: InetSocketAddress) extends Actor{
   import Tcp._
   import context.system
 
@@ -34,7 +40,7 @@ class SimplisticHandler(multiplier : ActorRef) extends Actor{
 
         // message acknowledgment from the client
         else if (command == "Ack") {
-          // println("AAck")
+          println("AAck")
           messageAck = command
         }
         else {
@@ -46,41 +52,59 @@ class SimplisticHandler(multiplier : ActorRef) extends Actor{
 
           if(command == "connect") {
             // create queue (message scheme)
-            queueAddress = context.actorOf(Props[Queue])
+            val childProps = Props(classOf[Queue])
+            val supervisor = BackoffSupervisor.props(
+
+              BackoffOpts.onStop(
+                childProps,
+                childName = "queue",
+                minBackoff = 0.2.seconds,
+                maxBackoff = 2.seconds,
+                randomFactor = 0.2 // adds 20% "noise" to vary the intervals slightly
+              ))
+
+            queueAddress = system.actorOf(supervisor, name="supervisor")
+            
+            // context.actorOf(supervisor, name = "mySupervisor")
             clientAddress = sender
             queueAddress ! ("set_client_address", clientAddress)
             // tells multiplier to send message to handler
             multiplier ! command
           }
           else if (command == "subscribe") {
-            queueAddress ! (command, topic)
+            queueAddress ! (command, topic, self)
           }
           else if (command == "unsubscribe"){
             queueAddress ! (command, topic)
-
           }
         }
-        
     }
 
     // sends messages to Client
     case ("send_message", topic: String, message: String) => {
-      // println(clientAddress)
+      // println(queueAddress)
       queueAddress ! ("send_message", topic, message)
     }
     // sends message after ack with neccessary topic
     case ("send_message_client", message: String) => {
       if (messageAck == "Ack") {
-        var messageToClient = "[next after ack]  " + message
+        var messageToClient = message
         clientAddress ! Write(ByteString(messageToClient))
 
       }
+    }
+
+    // after receiving dead message sends its Address to Queue
+    case "dead" => {
+      Thread.sleep(500)
+      queueAddress ! ("set_handler_adress", self)
     }
     
 
     case PeerClosed     => 
     {
         println("Connection Closed ....")
+        
         context.stop(queueAddress)
         context.stop(self)
     }

@@ -11,7 +11,7 @@ class TCPServer(multiplier : ActorRef) extends Actor{
     import Tcp._
     import context.system
 
-  IO(Tcp) ! Bind(self, new InetSocketAddress("localhost", 8080))
+  IO(Tcp) ! Bind(self, new InetSocketAddress("0.0.0.0", 8080))
 
   def receive = {
     case b @ Bound(localAddress) =>
@@ -20,10 +20,10 @@ class TCPServer(multiplier : ActorRef) extends Actor{
     case CommandFailed(_: Bind) => context.stop(self)
 
     case c @ Connected(remote, local) =>
-    //   println(local)
+      // println(remote)
 
     // for each new connection creates a handler
-      val handler = context.actorOf(Props(new SimplisticHandler(multiplier)))
+      val handler = context.actorOf(Props(new SimplisticHandler(multiplier, remote)))
       val connection = sender()
       connection ! Register(handler, keepOpenOnPeerClosed = false)
   }
